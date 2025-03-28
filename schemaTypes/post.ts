@@ -40,6 +40,12 @@ export default defineType({
       of: [{type: 'reference', to: {type: 'category'}}],
     }),
     defineField({
+      name: 'project',
+      title: 'Project',
+      type: 'reference',
+      to: {type: 'project'},
+    }),
+    defineField({
       name: 'publishedAt',
       title: 'Published at',
       type: 'datetime',
