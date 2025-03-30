@@ -26,7 +26,6 @@ export default defineType({
     defineField({
       // Nuxt should pick this up to make Project pages
       // and use the slug to generate the URL for the category page
-      // TODO: Create a tag for this on creation
       name: 'slug',
       title: 'Slug',
       type: 'slug',
@@ -70,32 +69,14 @@ export default defineType({
       name: 'categories',
       title: 'Categories',
       type: 'array',
+      description: 'Projects can be under multiple categories- the top most category is the main category',
       of: [{type: 'reference', to: {type: 'category'}}],
-      to: {type: 'category'},
       options: {
         // Disable the creation of new categories
         disableNew: true,
+        sortable: true,
       },
       validation: rule => rule.required().error('At least one category is required'),
-      group: 'info',
-    }),
-    defineField({
-      name: 'mainCategory',
-      title: 'Main Category',
-      type: 'reference',
-      to: {type: 'category'},
-      options: {
-        // Disable the creation of new categories
-        disableNew: true
-      },
-      validation: rule => [
-        rule.required().error('Main category is required'),
-        rule.custom((value, {document}) => {
-          // Ensure the main category is one of the selected categories
-          if (!document?.categories) return true
-          return document.categories.some(category => category._ref === value._ref) || 'Main category must be one of the selected categories'
-        }),
-      ],
       group: 'info',
     }),
     defineField({
