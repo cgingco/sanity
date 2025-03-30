@@ -9,11 +9,25 @@ export default defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
+      validation: rule => rule.required().error('Title is required'),
     }),
     defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'text',
+      // Nuxt should pick this up to make Category pages
+      // and use the slug to generate the URL for the category page
+      // TODO: Create a tag for this on creation
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: {
+        source: 'title',
+        maxLength: 96,
+      },
+      validation: rule => rule.required().error('Slug is required'),
+    }),
+    defineField({
+      name: 'body',
+      title: 'Body',
+      type: 'markdown',
     }),
   ],
 })
