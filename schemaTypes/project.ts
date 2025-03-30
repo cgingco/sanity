@@ -22,6 +22,7 @@ export default defineType({
         source: 'title',
         maxLength: 96,
       },
+      // TODO: Ensure these are unique between categories AND projects
       validation: rule => rule.required().error('Slug is required'),
     }),
     defineField({
