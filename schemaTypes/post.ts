@@ -4,12 +4,24 @@ export default defineType({
   name: 'post',
   title: 'Post',
   type: 'document',
+  groups: [
+    {
+      name: 'info',
+      title: 'Info',
+      default: true,
+    },
+    {
+      name: 'body',
+      title: 'Body',
+    },
+  ],
   fields: [
     defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
       validation: rule => rule.required().error('Title is required'),
+      group: 'info',
     }),
     defineField({
       name: 'slug',
@@ -21,6 +33,7 @@ export default defineType({
       },
       // TODO: Ensure these are unique for posts
       validation: rule => rule.required().error('Slug is required'),
+      group: 'info',
     }),
     defineField({
       name: 'author',
@@ -28,6 +41,7 @@ export default defineType({
       type: 'reference',
       to: {type: 'author'},
       validation: rule => rule.required().error('Author is required'),
+      group: 'info',
     }),
     defineField({
       name: 'mainImage',
@@ -36,6 +50,7 @@ export default defineType({
       options: {
         hotspot: true,
       },
+      group: 'info',
     }),
     defineField({
       // Optional, added as a 'tag'
@@ -49,6 +64,7 @@ export default defineType({
           disableNew: true,
         }
       }],
+      group: 'info',
     }),
     defineField({
       // Optional, added as a 'tag'
@@ -60,39 +76,29 @@ export default defineType({
         disableNew: true,
       },
       readOnly: ({ document }) => !document?.categories,
-      // TODO: Only show and allow projecst assigned to categories from this post
-      // validation: rule => rule.custom((project, context) => {
-
-      //   // Access the parent document (the blog post) to get its categories
-      //   const blogCategories = context.parent?.categories || [];
-      //   const blogCategoryIds = blogCategories.map((category) => category._ref);
-
-      //   // If no project is selected, it's valid (allowing for optional field)
-      //   if (!project) return true;
-
-      //   const projectCategories = project?.categories || [];
-      //   const projectCategoryIds = projectCategories.map((category) => category._ref);
-
-      //   // Check if any of the project's categories match the blog post's categories
-      //   const isValid = projectCategoryIds.some((id) => blogCategoryIds.includes(id));
-
-      //   if (!isValid) {
-      //     return `The selected project does not belong to the same category as this post.`;
-      //   }
-
-      //   return true; // Valid if the project belongs to a valid category
-      // }),
+      hidden: ({ document }) => !document?.categories, // Hide field if categories are cleared
+      validation: rule => rule.custom((project, context) => {
+        const categories = context.document?.categories;
+        if (!categories && project) {
+          return 'Project must be cleared if categories are cleared.';
+        }
+        return true;
+      }),
+      group: 'info',
     }),
     defineField({
       name: 'publishedAt',
       title: 'Published at',
       type: 'datetime',
       validation: rule => rule.required().error('Published date is required'),
+      group: 'info',
     }),
     defineField({
       name: 'body',
       title: 'Body',
       type: 'markdown',
+      group: 'body',
+      validation: rule => rule.required().error('Body is required'),
     }),
   ],
   initialValue: {

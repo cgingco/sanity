@@ -4,12 +4,24 @@ export default defineType({
   name: 'project',
   title: 'Project',
   type: 'document',
+  groups: [
+    {
+      name: 'info',
+      title: 'Info',
+      default: true,
+    },
+    {
+      name: 'body',
+      title: 'Body',
+    },
+  ],
   fields: [
     defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
       validation: rule => rule.required().error('Title is required'),
+      group: 'info',
     }),
     defineField({
       // Nuxt should pick this up to make Project pages
@@ -22,8 +34,27 @@ export default defineType({
         source: 'title',
         maxLength: 96,
       },
-      // TODO: Ensure these are unique between categories AND projects
-      validation: rule => rule.required().error('Slug is required'),
+      validation: [
+        rule => rule.required().error('Slug is required'),
+        rule => rule.custom((slug, context) => {
+          if (!slug) {
+            return true; // Skip validation if slug is not set
+          }
+
+          const {getClient} = context;
+          const client = getClient({apiVersion: '2025-03-30'});
+
+          return client.fetch(
+            `!defined(*[_type in ["category", "project"] && slug.current == $slug && !(_id in [$draftId, $publishedId])][0]._id)`,
+            {
+              slug: slug.current,
+              draftId: context.document._id,
+              publishedId: context.document._id.replace(/^drafts\./, ''),
+            }
+          ).then(isUnique => isUnique || 'Slug must be unique across categories and projects');
+        }),
+      ],
+      group: 'info',
     }),
     defineField({
       name: 'mainImage',
@@ -32,6 +63,7 @@ export default defineType({
       options: {
         hotspot: true,
       },
+      group: 'info',
     }),
     defineField({
       // Projects can be under multiple categories
@@ -45,6 +77,7 @@ export default defineType({
         disableNew: true,
       },
       validation: rule => rule.required().error('At least one category is required'),
+      group: 'info',
     }),
     defineField({
       name: 'mainCategory',
@@ -63,6 +96,7 @@ export default defineType({
           return document.categories.some(category => category._ref === value._ref) || 'Main category must be one of the selected categories'
         }),
       ],
+      group: 'info',
     }),
     defineField({
       // Nuxt should pick this up and add it to the infobox
@@ -70,6 +104,7 @@ export default defineType({
       title: 'Started at',
       type: 'datetime',
       validation: rule => rule.required().error('Start date is required'),
+      group: 'info',
     }),
     defineField({
       // Nuxt should pick this up and add it to the infobox
@@ -77,6 +112,7 @@ export default defineType({
       name: 'finishDate',
       title: 'Finished at',
       type: 'datetime',
+      group: 'info',
     }),
     defineField({
       // Wikipedia-style infobox
@@ -102,20 +138,24 @@ export default defineType({
             },
           ],
         }
-      ]
+      ],
+      group: 'info',
     }),
     defineField({
       // Short description for cards
       name: 'exerpt',
       title: 'Exerpt',
-      type: 'text',
+      type: 'string',
       description: 'Short description for cards',
       validation: rule => rule.max(200).warning('Shorter is better'),
+      group: 'body',
     }),
     defineField({
       name: 'body',
       title: 'Body',
       type: 'markdown',
+      description: 'Main content of the project',
+      group: 'body',
     }),
   ],
   initialValue: {
