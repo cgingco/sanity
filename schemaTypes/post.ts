@@ -32,8 +32,26 @@ export default defineType({
         source: 'title',
         maxLength: 96,
       },
-      // TODO: Ensure these are unique for posts
-      validation: rule => rule.required().error('Slug is required'),
+      validation: [
+        rule => rule.required().error('Slug is required'),
+        rule => rule.custom((slug, context) => {
+          if (!slug) {
+            return true; // Skip validation if slug is not set
+          }
+
+          const {getClient} = context;
+          const client = getClient({apiVersion: '2025-03-30'});
+
+          return client.fetch(
+            `!defined(*[_type in ["post"] && slug.current == $slug && !(_id in [$draftId, $publishedId])][0]._id)`,
+            {
+              slug: slug.current,
+              draftId: context.document._id,
+              publishedId: context.document._id.replace(/^drafts\./, ''),
+            }
+          ).then(isUnique => isUnique || 'Slug must be unique');
+        }),
+      ],
       group: 'info',
     }),
     defineField({
@@ -98,20 +116,26 @@ export default defineType({
       name: 'tags',
       title: 'Tags',
       type: 'tags',
+      description: 'Use tags to attach keywords to this post.',
       options: {
         allowCreate: true,
         includeFromRelated: 'tags',
-        // Should grab all slugs from categories and project and add them as tags
-        predefinedTags: async () => client.fetch(
-          `*[_type == "category" || _type == "project"]{title, slug}`
-        ).then(
-          tags => tags.map(tag => ({label: tag.title, value: tag.slug}))
-        ),
+        // NOTE: Don't need to do this - I'm attaching categories and projects above
+        // as references, so I don't need to do this here.
+        // predefinedTags: async () => client.fetch(
+        //   // Grab all slugs from categories and project and add them as tags
+        //   `*[_type == "category" || _type == "project"]{title, slug}`
+        // ).then(
+        //   tags => tags.map(tag => ({label: tag.title, value: tag.slug}))
+        // ),
         onCreate: (value) => ({
+          // On create, create a slug from the value
           label: value,
           value: value.toLowerCase().replace(/\W/g, '-'),
         }),
         checkValid: (input, values) => {
+          // Checks if the input exists, is not empty, and is not already in the values array
+          // Also checks if the input is a valid slug (no spaces, no special characters)
           return (
             !!input &&
             input.trim() === input &&
