@@ -133,8 +133,11 @@ export default defineType({
             {
               name: 'value',
               title: 'Value',
-              type: 'string',
-              validation: rule => rule.required().error('Value is required'),
+              type: 'markdown',
+              validation: [
+                rule => rule.required().error('Value is required'),
+                rule => rule.max(200).warning('Shorter is better')
+              ],
             },
           ],
         }
