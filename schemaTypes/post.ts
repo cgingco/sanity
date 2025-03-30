@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {client} from '../sanity.config'
 
 export default defineType({
   name: 'post',
@@ -91,6 +92,33 @@ export default defineType({
       title: 'Published at',
       type: 'datetime',
       validation: rule => rule.required().error('Published date is required'),
+      group: 'info',
+    }),
+    defineField({
+      name: 'tags',
+      title: 'Tags',
+      type: 'tags',
+      options: {
+        allowCreate: true,
+        includeFromRelated: 'tags',
+        // Should grab all slugs from categories and project and add them as tags
+        predefinedTags: async () => client.fetch(
+          `*[_type == "category" || _type == "project"]{title, slug}`
+        ).then(
+          tags => tags.map(tag => ({label: tag.title, value: tag.slug}))
+        ),
+        onCreate: (value) => ({
+          label: value,
+          value: value.toLowerCase().replace(/\W/g, '-'),
+        }),
+        checkValid: (input, values) => {
+          return (
+            !!input &&
+            input.trim() === input &&
+            !values.includes(input.trim().toLowerCase().replace(/\W/g, '-'))
+          )
+        }
+      },
       group: 'info',
     }),
     defineField({
