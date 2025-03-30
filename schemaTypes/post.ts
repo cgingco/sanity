@@ -1,5 +1,4 @@
 import {defineField, defineType} from 'sanity'
-import {client} from '../sanity.config'
 
 export default defineType({
   name: 'post',
@@ -72,37 +71,14 @@ export default defineType({
       group: 'info',
     }),
     defineField({
-      // Optional, added as a 'tag'
-      name: 'categories',
-      title: 'Categories',
-      type: 'array',
-      of: [{
-        type: 'reference',
-        to: {type: 'category'},
-        options: {
-          disableNew: true,
-        }
-      }],
-      group: 'info',
-    }),
-    defineField({
-      // Optional, added as a 'tag'
       name: 'project',
       title: 'Project',
+      description: 'If this post is about a project, select it here.',
       type: 'reference',
       to: {type: 'project'},
       options: {
         disableNew: true,
       },
-      readOnly: ({ document }) => !document?.categories,
-      hidden: ({ document }) => !document?.categories, // Hide field if categories are cleared
-      validation: rule => rule.custom((project, context) => {
-        const categories = context.document?.categories;
-        if (!categories && project) {
-          return 'Project must be cleared if categories are cleared.';
-        }
-        return true;
-      }),
       group: 'info',
     }),
     defineField({
