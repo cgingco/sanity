@@ -69,7 +69,7 @@ export default defineType({
       name: 'categories',
       title: 'Categories',
       type: 'array',
-      description: 'Projects can be under multiple categories- the top most category is the main category',
+      description: 'The top most category is the main category - this only affects the default breadcrumb',
       of: [{type: 'reference', to: {type: 'category'}}],
       options: {
         // Disable the creation of new categories
